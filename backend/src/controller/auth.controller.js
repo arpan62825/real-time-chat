@@ -86,6 +86,7 @@ export const login = async (req, res) => {
     console.log(
       `An error occurred while performing the task: ${error.message}`
     );
+    res.status(500).json({message: "internal server error"})
   }
 };
 
