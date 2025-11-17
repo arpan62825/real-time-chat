@@ -1,16 +1,26 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-dotenv.config();
 
 export const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error("❌ MongoDB Connection Failed:", error.message);
-    process.exit(1); // stop server if DB connection fails
+  const maxRetries = 5;
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      const conn = await mongoose.connect(process.env.MONGODB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+      break;
+    } catch (err) {
+      console.error(`MongoDB connection failed (${retries + 1}):`, err.message);
+      retries++;
+      await new Promise(res => setTimeout(res, 5000));
+    }
+  }
+
+  if (retries === maxRetries) {
+    console.error("❌ MongoDB connection failed after retries. Exiting...");
+    process.exit(1);
   }
 };
